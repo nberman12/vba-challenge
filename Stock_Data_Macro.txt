@@ -1,0 +1,100 @@
+Sub vbastocks()
+
+Dim ws As Worksheet
+    For Each ws In ActiveWorkbook.Worksheets
+    ws.Activate
+'Create & Assign all variables
+        Dim ticker As String
+        Dim close_price As Double
+        Dim open_price As Double
+        Dim year_change As Double
+        Dim percent_diff As Double
+        Dim ticker_total As Double
+            ticker_total = 0
+        Dim ticker_tabel_row As Integer
+            ticker_tabel_row = 2
+        Dim i As Long
+            
+    'Find the last row
+        last_row = ws.Cells(Rows.Count, 1).End(xlUp).Row
+    
+    'Add titles for measures
+        Cells(1, 9).Value = "Ticker"
+        Cells(1, 10).Value = "Yearly Change"
+        Cells(1, 11).Value = "Percent Change"
+        Cells(1, 12).Value = "Total Stock Volume"
+        
+        'set starting open price
+        open_price = Cells(2, 3).Value
+    
+    'Loop through all tickers & and complete calculations
+        For i = 2 To last_row
+        
+            If Cells(i + 1, 1).Value <> Cells(i, 1).Value Then
+                'ticker name
+                ticker = Cells(i, 1).Value
+                Range("I" & ticker_tabel_row).Value = ticker
+                'Close price
+                close_price = Cells(i, 6).Value
+                'Yearly change
+                year_change = close_price - open_price
+                Range("J" & ticker_tabel_row).Value = year_change
+                If (open_price = 0 And close_price = 0) Then
+                        Percent_Change = 0
+                ElseIf (open_price = 0 And close_price <> 0) Then
+                    Percent_Change = 1
+                Else
+                    percent_diff = year_change / open_price
+                    Range("K" & ticker_tabel_row).Value = percent_diff
+                    Range("K" & ticker_tabel_row).NumberFormat = "0.00%"
+                End If
+                'ticker volume
+                ticker_total = ticker_total + Cells(i, 7).Value
+                Range("L" & ticker_tabel_row).Value = ticker_total
+                'add row to tabel
+                ticker_tabel_row = ticker_tabel_row + 1
+                'reset open price and ticker volume
+                open_price = Cells(i + 1, 3)
+                ticker_total = 0
+            Else
+                ticker_total = ticker_total + Cells(i, 7).Value
+            
+            End If
+             
+          Next i
+          
+          'Get tabel last row for color formatting
+          table_last_row = ws.Cells(Rows.Count, 10).End(xlUp).Row
+          
+          'Start color formatting
+          For j = 2 To table_last_row
+            If (Cells(j, 10).Value > 0 Or Cells(j, 10).Value = 0) Then
+                Cells(j, 10).Interior.ColorIndex = 10
+            ElseIf Cells(j, 10).Value < 0 Then
+                Cells(j, 10).Interior.ColorIndex = 3
+            End If
+          Next j
+          'Title recap section
+          Cells(2, 15).Value = "Greatest % Increase"
+          Cells(3, 15).Value = "Greatest % Decrease"
+          Cells(4, 15).Value = "Greatest Total Volume"
+          Cells(1, 16).Value = "Ticker"
+          Cells(1, 17).Value = "Value"
+          
+          For t = 2 To table_last_row
+            If Cells(t, 11).Value = Application.WorksheetFunction.Max(ws.Range("K2:K" & table_last_row)) Then
+                    Cells(2, 16).Value = Cells(t, 9).Value
+                    Cells(2, 17).Value = Cells(t, 11).Value
+                    Cells(2, 17).NumberFormat = "0.00%"
+            ElseIf Cells(t, 11).Value = Application.WorksheetFunction.Min(ws.Range("K2:K" & table_last_row)) Then
+                    Cells(3, 16).Value = Cells(t, 9).Value
+                    Cells(3, 17).Value = Cells(t, 11).Value
+                    Cells(3, 17).NumberFormat = "0.00%"
+            ElseIf Cells(t, 12).Value = Application.WorksheetFunction.Max(ws.Range("L2:L" & table_last_row)) Then
+                    Cells(4, 16).Value = Cells(t, 9).Value
+                    Cells(4, 17).Value = Cells(t, 12).Value
+                End If
+            Next t
+    Next ws
+    
+End Sub
